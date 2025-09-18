@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://proposeai.vercel.app/sitemap.xml
