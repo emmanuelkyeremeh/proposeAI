@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { signOutUser } from "../firebase/auth";
 import { isSuperuser } from "../firebase/subscriptions";
@@ -6,6 +6,7 @@ import "./Navbar.css";
 
 const Navbar = ({ user }) => {
   const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -16,6 +17,14 @@ const Navbar = ({ user }) => {
     }
   };
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <nav className="navbar">
       <div className="navbar-container">
@@ -23,7 +32,8 @@ const Navbar = ({ user }) => {
           <h1>📝 ProposeAI</h1>
         </Link>
 
-        <div className="navbar-menu">
+        {/* Desktop Menu */}
+        <div className="navbar-menu desktop-menu">
           <Link to="/dashboard" className="navbar-link">
             Dashboard
           </Link>
@@ -43,6 +53,67 @@ const Navbar = ({ user }) => {
           )}
 
           <div className="navbar-user">
+            <span className="user-name">{user.displayName || user.email}</span>
+            <button onClick={handleSignOut} className="sign-out-btn">
+              Sign Out
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Hamburger Button */}
+        <button
+          className="hamburger-menu"
+          onClick={toggleMobileMenu}
+          aria-label="Toggle mobile menu"
+        >
+          <span
+            className={`hamburger-line ${isMobileMenuOpen ? "active" : ""}`}
+          ></span>
+          <span
+            className={`hamburger-line ${isMobileMenuOpen ? "active" : ""}`}
+          ></span>
+          <span
+            className={`hamburger-line ${isMobileMenuOpen ? "active" : ""}`}
+          ></span>
+        </button>
+
+        {/* Mobile Menu */}
+        <div className={`mobile-menu ${isMobileMenuOpen ? "open" : ""}`}>
+          <Link
+            to="/dashboard"
+            className="mobile-link"
+            onClick={closeMobileMenu}
+          >
+            Dashboard
+          </Link>
+          <Link
+            to="/new-proposal"
+            className="mobile-link"
+            onClick={closeMobileMenu}
+          >
+            New Proposal
+          </Link>
+          <Link to="/pricing" className="mobile-link" onClick={closeMobileMenu}>
+            Pricing
+          </Link>
+          <Link
+            to="/analytics"
+            className="mobile-link"
+            onClick={closeMobileMenu}
+          >
+            Analytics
+          </Link>
+          {isSuperuser(user) && (
+            <Link
+              to="/admin"
+              className="mobile-link admin-link"
+              onClick={closeMobileMenu}
+            >
+              Admin Dashboard
+            </Link>
+          )}
+
+          <div className="mobile-user">
             <span className="user-name">{user.displayName || user.email}</span>
             <button onClick={handleSignOut} className="sign-out-btn">
               Sign Out

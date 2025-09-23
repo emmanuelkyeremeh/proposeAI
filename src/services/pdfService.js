@@ -6,11 +6,6 @@ const parseMetadataFromContent = (htmlContent, proposal) => {
   
   if (!htmlContent) return metadata;
   
-  console.log('=== DEBUGGING PDF CONTENT PARSING ===');
-  console.log('Full content length:', htmlContent.length);
-  console.log('First 1000 chars:', htmlContent.substring(0, 1000));
-  console.log('Proposal object:', proposal);
-  
   // Try multiple patterns to find "Prepared by"
   const patterns = [
     /Prepared by:\s*([^<\n\r]+)/i,
@@ -32,7 +27,6 @@ const parseMetadataFromContent = (htmlContent, proposal) => {
         .replace(/&#39;/g, "'")
         .replace(/\s+/g, ' ') // Normalize whitespace
         .trim();
-      console.log('Found prepared by with pattern:', pattern, 'Result:', metadata.preparedBy);
       break;
     }
   }
@@ -54,7 +48,6 @@ const parseMetadataFromContent = (htmlContent, proposal) => {
             .replace(/&#39;/g, "'")
             .replace(/\s+/g, ' ') // Normalize whitespace
             .trim();
-          console.log('Found prepared by in line:', line, 'Result:', metadata.preparedBy);
           break;
         }
       }
@@ -74,7 +67,6 @@ const parseMetadataFromContent = (htmlContent, proposal) => {
       .replace(/&#39;/g, "'")
       .replace(/\s+/g, ' ') // Normalize whitespace
       .trim();
-    console.log('Found date:', metadata.date);
   }
   
   // Look for patterns like "Prepared for: Client Name"
@@ -90,11 +82,8 @@ const parseMetadataFromContent = (htmlContent, proposal) => {
       .replace(/&#39;/g, "'")
       .replace(/\s+/g, ' ') // Normalize whitespace
       .trim();
-    console.log('Found prepared for:', metadata.preparedFor);
   }
   
-  console.log('Final parsed metadata:', metadata);
-  console.log('=== END DEBUGGING ===');
   return metadata;
 };
 
@@ -190,11 +179,9 @@ export const generatePDF = async (proposal, htmlContent) => {
     let finalPreparedBy = metadata.preparedBy;
     if (!finalPreparedBy && proposal.companyName) {
       finalPreparedBy = proposal.companyName;
-      console.log('Using proposal.companyName:', finalPreparedBy);
     }
     if (!finalPreparedBy && proposal.projectDetails && proposal.projectDetails.companyName) {
       finalPreparedBy = proposal.projectDetails.companyName;
-      console.log('Using projectDetails.companyName:', finalPreparedBy);
     }
     
     const metadataLines = [
@@ -202,8 +189,6 @@ export const generatePDF = async (proposal, htmlContent) => {
       `Date: ${metadata.date || currentDate}`,
       `Prepared for: ${metadata.preparedFor || proposal.clientName || 'Client'}`
     ];
-    
-    console.log('Final metadata lines:', metadataLines);
 
     for (const line of metadataLines) {
       page.drawText(line, {
