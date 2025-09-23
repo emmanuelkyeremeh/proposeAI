@@ -17,6 +17,7 @@ const NewProposal = ({ user }) => {
     title: "",
     projectType: "",
     clientName: "",
+    companyName: "",
     projectDescription: "",
     budget: "",
     timeline: "",
@@ -84,6 +85,7 @@ const NewProposal = ({ user }) => {
       const proposalId = await createProposal(user.uid, {
         title: formData.title,
         clientName: formData.clientName,
+        companyName: formData.companyName,
         projectType: formData.projectType,
         template: formData.template,
         content: aiContent,
@@ -175,6 +177,19 @@ const NewProposal = ({ user }) => {
               value={formData.clientName}
               onChange={handleChange}
               placeholder="e.g., ABC Company"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="companyName">Your Company Name *</label>
+            <input
+              type="text"
+              id="companyName"
+              name="companyName"
+              value={formData.companyName}
+              onChange={handleChange}
+              placeholder="e.g., Your Company Name"
               required
             />
           </div>
@@ -283,7 +298,7 @@ const NewProposal = ({ user }) => {
               </p>
               <p>
                 Upgrade to Premium for unlimited proposals at just $
-                {import.meta.env.VITE_PREMIUM_PRICE_USD || 5}/month!
+                {import.meta.env.VITE_PREMIUM_PRICE_USD || 2}/month!
               </p>
               <div className="modal-features">
                 <ul>

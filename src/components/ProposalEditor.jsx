@@ -143,18 +143,31 @@ const ProposalEditor = ({ user }) => {
   );
 
   const handleExportPDF = React.useCallback(async () => {
-    if (!proposal) return;
+    if (!proposal || !content || !id) {
+      console.error("Missing required data for PDF export:", {
+        proposal: !!proposal,
+        content: !!content,
+        id: !!id,
+      });
+      alert("Unable to export PDF. Please refresh the page and try again.");
+      return;
+    }
 
     try {
+      setShowExportDropdown(false); // Close dropdown immediately to prevent multiple clicks
+
       const pdfBlob = await generatePDF(proposal, content);
       downloadPDF(pdfBlob, `${proposal.title || "proposal"}.pdf`);
 
       // Upload to Firebase Storage
       await uploadProposalPDF(id, pdfBlob);
-      setShowExportDropdown(false);
     } catch (error) {
       console.error("Error exporting PDF:", error);
-      alert("Failed to export PDF. Please try again.");
+      alert(
+        `Failed to export PDF: ${
+          error.message || "Unknown error"
+        }. Please try again.`
+      );
     }
   }, [proposal, content, id]);
 

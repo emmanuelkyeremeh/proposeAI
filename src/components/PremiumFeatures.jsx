@@ -56,7 +56,7 @@ const PremiumFeatures = ({ user, children, featureName }) => {
       </div>
       <div className="premium-actions">
         <a href="/pricing" className="upgrade-btn">
-          Upgrade to Premium - ${import.meta.env.VITE_PREMIUM_PRICE_USD || 5}
+          Upgrade to Premium - ${import.meta.env.VITE_PREMIUM_PRICE_USD || 2}
           /month
         </a>
         <p className="upgrade-note">

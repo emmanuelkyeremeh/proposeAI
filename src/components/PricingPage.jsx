@@ -11,10 +11,10 @@ const PricingPage = ({ user, onSubscriptionUpdate }) => {
   // Paystack configuration
   const publicKey =
     import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "pk_test_your_public_key_here";
-  const amount = parseInt(import.meta.env.VITE_PREMIUM_PRICE_PESEWAS) || 50000; // Premium price in pesewas
+  const amount = parseInt(import.meta.env.VITE_PREMIUM_PRICE_PESEWAS) || 2000; // Premium price in pesewas
   const currency = import.meta.env.VITE_CURRENCY_CODE || "GHS";
-  const priceUSD = import.meta.env.VITE_PREMIUM_PRICE_USD || 5;
-  const priceGHS = import.meta.env.VITE_PREMIUM_PRICE_GHS || 500;
+  const priceUSD = import.meta.env.VITE_PREMIUM_PRICE_USD || 2;
+  const priceGHS = import.meta.env.VITE_PREMIUM_PRICE_GHS || 20;
 
   useEffect(() => {
     // Load current subscription status

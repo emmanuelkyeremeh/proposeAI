@@ -112,11 +112,11 @@ export const generateProposal = async (projectDetails, template = 'general') => 
           'X-Title': SITE_NAME
         },
         body: JSON.stringify({
-          model: 'openrouter/sonoma-sky-alpha',
+          model: 'meta-llama/llama-3.3-8b-instruct:free',
           messages: [
             {
               role: 'system',
-              content: 'You are a professional proposal writing assistant. Generate clear, compelling, and professional proposals that help freelancers win clients. IMPORTANT: Do not include any branding, signatures, or promotional text at the end of your response. Only provide the proposal content without any additional marketing or attribution.'
+              content: 'You are a professional proposal writing assistant. Generate clear, compelling, and professional proposals that help freelancers win clients. CRITICAL: Do not include any header information like "Prepared by", "Date", "Prepared for", company names, client names, or any metadata. Do not include any branding, signatures, or promotional text at the end of your response. Start directly with the Executive Summary section. Only provide the proposal content without any additional marketing or attribution.'
             },
             {
               role: 'user',
@@ -139,8 +139,8 @@ export const generateProposal = async (projectDetails, template = 'general') => 
     const data = await response.json();
     let content = data.choices[0].message.content;
     
-    // Remove any Sonoma branding that might slip through
-    content = removeSonomaBranding(content);
+    // Remove any Llama branding that might slip through
+    content = removeLlamaBranding(content);
     
     return content;
   } catch (error) {
@@ -158,7 +158,7 @@ export const improveText = async (text, action) => {
 
 // Create prompt for proposal generation
 const createPrompt = (projectDetails, template) => {
-  const { projectType, clientName, projectDescription, budget, timeline, requirements } = projectDetails;
+  const { projectType, clientName, companyName, projectDescription, budget, timeline, requirements } = projectDetails;
   
   let basePrompt = `Generate a professional proposal for the following project:
 
@@ -169,14 +169,7 @@ Budget: ${budget || 'Not specified'}
 Timeline: ${timeline || 'Not specified'}
 Requirements: ${requirements || 'Not specified'}
 
-IMPORTANT: Format the proposal EXACTLY like this structure with proper HTML formatting:
-
-<h1>Project Proposal: [Project Title]</h1>
-<p><strong>Prepared by:</strong> [Your Company Name]<br>
-<strong>Date:</strong> [Current Date]<br>
-<strong>Prepared for:</strong> ${clientName}</p>
-
-<hr>
+CRITICAL: Do NOT include any header information like "Prepared by", "Date", or "Prepared for". Do NOT include any company information or client information in the content. Start directly with the Executive Summary section:
 
 <h2>1. Executive Summary</h2>
 <p>[2-3 paragraphs explaining the project value and approach]</p>
@@ -295,12 +288,7 @@ const generateFallbackProposal = (projectDetails, template) => {
 
   const selectedTemplate = templates[template] || templates['general'];
   
-  let proposal = `<h1>Project Proposal: ${projectType}</h1>\n\n`;
-  proposal += `<p><strong>Prepared by:</strong> ProposeAI Development Team<br>\n`;
-  proposal += `<strong>Date:</strong> ${currentDate}<br>\n`;
-  proposal += `<strong>Prepared for:</strong> ${clientName}</p>\n\n`;
-  proposal += `<hr>\n\n`;
-  proposal += `<h2>1. Executive Summary</h2>\n\n`;
+  let proposal = `<h2>1. Executive Summary</h2>\n\n`;
   proposal += `<p>${selectedTemplate.intro}</p>\n\n`;
   proposal += `<p>Our proposed development will align with your ${timeline ? `timeline of ${timeline}` : 'project timeline'} and ${budget ? `budget range of ${budget}` : 'budget requirements'}. This investment ensures a scalable, secure solution that enhances workflow efficiency, reduces errors, and supports collaborative decision-making.</p>\n\n`;
   proposal += `<p>With our expertise in ${template === 'web-dev' ? 'web technologies' : template === 'design' ? 'design and user experience' : template === 'consulting' ? 'strategic consulting' : 'project management'} and ${template === 'web-dev' ? 'fullstack development' : template === 'design' ? 'creative design' : template === 'consulting' ? 'business analysis' : 'solution development'}, we are committed to delivering a high-quality product that exceeds expectations and drives value for ${clientName}.</p>\n\n`;
@@ -471,18 +459,16 @@ const improveTextWithBrainJS = (text, action) => {
   return improvedText;
 };
 
-// Remove Sonoma branding from AI responses
-const removeSonomaBranding = (text) => {
+// Remove Llama branding from AI responses
+const removeLlamaBranding = (text) => {
   const brandingPatterns = [
-    /Thank you for considering Sonoma, built by Oak AI\.?/gi,
-    /Thank you for considering Sonoma\.?/gi,
-    /built by Oak AI\.?/gi,
-    /Sonoma, built by Oak AI\.?/gi,
-    /Generated by Sonoma\.?/gi,
-    /Powered by Sonoma\.?/gi,
-    /Created by Sonoma\.?/gi,
-    /Sonoma AI\.?/gi,
-    /Oak AI\.?/gi
+    /Thank you for using Llama\.?/gi,
+    /Generated by Llama\.?/gi,
+    /Powered by Llama\.?/gi,
+    /Created by Llama\.?/gi,
+    /Llama AI\.?/gi,
+    /Meta Llama\.?/gi,
+    /Meta's Llama\.?/gi
   ];
   
   let cleanedText = text;

@@ -1,8 +1,139 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
+// Parse metadata from HTML content
+const parseMetadataFromContent = (htmlContent, proposal) => {
+  const metadata = {};
+  
+  if (!htmlContent) return metadata;
+  
+  console.log('=== DEBUGGING PDF CONTENT PARSING ===');
+  console.log('Full content length:', htmlContent.length);
+  console.log('First 1000 chars:', htmlContent.substring(0, 1000));
+  console.log('Proposal object:', proposal);
+  
+  // Try multiple patterns to find "Prepared by"
+  const patterns = [
+    /Prepared by:\s*([^<\n\r]+)/i,
+    /Prepared by\s*:\s*([^<\n\r]+)/i,
+    /<[^>]*>Prepared by:\s*([^<\n\r]+)/i,
+    /Prepared by:\s*<[^>]*>([^<]+)<\/[^>]*>/i
+  ];
+  
+  for (const pattern of patterns) {
+    const match = htmlContent.match(pattern);
+    if (match) {
+      metadata.preparedBy = match[1].trim()
+        .replace(/<[^>]*>/g, '') // Remove HTML tags
+        .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
+        .replace(/&amp;/g, '&') // Replace HTML entities
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/\s+/g, ' ') // Normalize whitespace
+        .trim();
+      console.log('Found prepared by with pattern:', pattern, 'Result:', metadata.preparedBy);
+      break;
+    }
+  }
+  
+  // If still not found, try looking for any text after "Prepared by" in different formats
+  if (!metadata.preparedBy) {
+    const lines = htmlContent.split(/\n|<br>|<p>|<\/p>/);
+    for (const line of lines) {
+      if (line.toLowerCase().includes('prepared by:')) {
+        const parts = line.split(':');
+        if (parts.length > 1) {
+          metadata.preparedBy = parts[1].trim()
+            .replace(/<[^>]*>/g, '') // Remove HTML tags
+            .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
+            .replace(/&amp;/g, '&') // Replace HTML entities
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/\s+/g, ' ') // Normalize whitespace
+            .trim();
+          console.log('Found prepared by in line:', line, 'Result:', metadata.preparedBy);
+          break;
+        }
+      }
+    }
+  }
+  
+  // Look for patterns like "Date: Date"
+  const dateMatch = htmlContent.match(/Date:\s*([^<\n\r]+)/i);
+  if (dateMatch) {
+    metadata.date = dateMatch[1].trim()
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
+      .replace(/&amp;/g, '&') // Replace HTML entities
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .trim();
+    console.log('Found date:', metadata.date);
+  }
+  
+  // Look for patterns like "Prepared for: Client Name"
+  const preparedForMatch = htmlContent.match(/Prepared for:\s*([^<\n\r]+)/i);
+  if (preparedForMatch) {
+    metadata.preparedFor = preparedForMatch[1].trim()
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
+      .replace(/&amp;/g, '&') // Replace HTML entities
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .trim();
+    console.log('Found prepared for:', metadata.preparedFor);
+  }
+  
+  console.log('Final parsed metadata:', metadata);
+  console.log('=== END DEBUGGING ===');
+  return metadata;
+};
+
+// Clean HTML content by removing metadata sections
+const cleanHTMLContent = (htmlContent) => {
+  if (!htmlContent) return '';
+  
+  // Remove any paragraphs that contain metadata
+  let cleaned = htmlContent
+    .replace(/<p[^>]*>.*?Prepared by:.*?<\/p>/gi, '')
+    .replace(/<p[^>]*>.*?Date:.*?<\/p>/gi, '')
+    .replace(/<p[^>]*>.*?Prepared for:.*?<\/p>/gi, '')
+    .replace(/<p[^>]*>.*?Client:.*?<\/p>/gi, '');
+  
+  // Remove any standalone metadata lines
+  cleaned = cleaned
+    .replace(/Prepared by:\s*[^\n<]+/gi, '')
+    .replace(/Date:\s*[^\n<]+/gi, '')
+    .replace(/Prepared for:\s*[^\n<]+/gi, '')
+    .replace(/Client:\s*[^\n<]+/gi, '');
+  
+  // Clean up extra whitespace and empty paragraphs
+  cleaned = cleaned
+    .replace(/<p[^>]*>\s*<\/p>/gi, '')
+    .replace(/\n\s*\n/g, '\n')
+    .trim();
+  
+  return cleaned;
+};
+
 // Convert HTML content to PDF
 export const generatePDF = async (proposal, htmlContent) => {
   try {
+    if (!proposal) {
+      throw new Error('Proposal data is required');
+    }
+    if (!htmlContent) {
+      throw new Error('HTML content is required');
+    }
     // Create a new PDF document
     const pdfDoc = await PDFDocument.create();
     let page = pdfDoc.addPage([595.28, 841.89]); // A4 size
@@ -12,8 +143,9 @@ export const generatePDF = async (proposal, htmlContent) => {
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-    // Parse HTML content and convert to PDF
-    const content = parseHTMLContent(htmlContent);
+    // Clean HTML content to remove any metadata sections and parse for PDF
+    const cleanedContent = cleanHTMLContent(htmlContent);
+    const content = parseHTMLContent(cleanedContent);
     let yPosition = height - 50;
     const margin = 50;
     const lineHeight = 20;
@@ -46,18 +178,32 @@ export const generatePDF = async (proposal, htmlContent) => {
       yPosition -= 25;
     }
 
-    // Add proposal metadata with proper spacing
+    // Parse metadata from the actual content
+    const metadata = parseMetadataFromContent(htmlContent, proposal);
     const currentDate = new Date().toLocaleDateString('en-US', { 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric' 
     });
     
+    // If we couldn't parse from content, try to get from proposal data
+    let finalPreparedBy = metadata.preparedBy;
+    if (!finalPreparedBy && proposal.companyName) {
+      finalPreparedBy = proposal.companyName;
+      console.log('Using proposal.companyName:', finalPreparedBy);
+    }
+    if (!finalPreparedBy && proposal.projectDetails && proposal.projectDetails.companyName) {
+      finalPreparedBy = proposal.projectDetails.companyName;
+      console.log('Using projectDetails.companyName:', finalPreparedBy);
+    }
+    
     const metadataLines = [
-      `Prepared by: ProposeAI Development Team`,
-      `Date: ${currentDate}`,
-      `Prepared for: ${proposal.clientName || 'Client'}`
+      `Prepared by: ${finalPreparedBy || 'ProposeAI Development Team'}`,
+      `Date: ${metadata.date || currentDate}`,
+      `Prepared for: ${metadata.preparedFor || proposal.clientName || 'Client'}`
     ];
+    
+    console.log('Final metadata lines:', metadataLines);
 
     for (const line of metadataLines) {
       page.drawText(line, {

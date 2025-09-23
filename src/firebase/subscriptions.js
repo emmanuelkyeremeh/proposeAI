@@ -218,7 +218,7 @@ export const getSubscriptionStats = async () => {
       freeUsers: users.filter(user => user.subscription.plan === 'free').length,
       premiumUsers: users.filter(user => user.subscription.plan === 'premium').length,
       totalProposals: users.reduce((sum, user) => sum + (user.subscription.proposalsUsed || 0), 0),
-      monthlyRevenue: users.filter(user => user.subscription.plan === 'premium').length * (import.meta.env.VITE_PREMIUM_PRICE_USD || 5) // Premium price per user
+      monthlyRevenue: users.filter(user => user.subscription.plan === 'premium').length * (import.meta.env.VITE_PREMIUM_PRICE_USD || 2) // Premium price per user
     };
     
     return stats;

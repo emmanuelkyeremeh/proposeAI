@@ -31,7 +31,7 @@ npm install quill pdf-lib react-quill react-router-dom
 1. Go to [OpenRouter](https://openrouter.ai/)
 2. Sign up and get your API key
 3. Add the API key to your `.env.local` file
-4. The app is configured to use the free "Sonoma Sky Alpha" model
+4. The app is configured to use the free "Llama 3.3 8B Instruct" model
 
 ### 5. Firebase Security Rules
 
